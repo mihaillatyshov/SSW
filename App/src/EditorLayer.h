@@ -92,15 +92,9 @@ namespace LM
 
         float Diametr = 0.0f;
 
-        float FrontAngle;
-
-    };
-
-    struct CalculationResult
-    {
-        bool IsBad = false;
-
-        float FrontAngle;
+        float FrontAngle = 0.0f;
+        float StepAngle = 0.0f;
+        float DiametrIn = 0.0f;
     };
 
     class EditorLayer : public Layer
@@ -160,10 +154,6 @@ namespace LM
         float m_GrindingWheelCalcRatation = 0.0f;
 
         ToolParams m_ToolParams;
-
-        int m_BadCalclulations = 0;
-        std::vector<std::vector<std::vector<std::vector<std::vector<std::vector<CalculationResult>>>>>>
-            m_CalculationResults;
 
         bool m_HasBestResult = false;
         BestResult m_BestResult;
