@@ -9,7 +9,19 @@ project(App VERSION 1.0)
 set(SOURCES     
     src/main.cpp
     
-    src/EditorLayer.cpp                             src/EditorLayer.h    
+    src/EditorLayer.cpp                             src/EditorLayer.h   
+
+    src/Calculations/Steps.cpp                      src/Calculations/Steps.h 
+    src/Calculations/Calculations.cpp               src/Calculations/Calculations.h
+
+    src/Graphics/GraphicsUtils.cpp                  src/Graphics/GraphicsUtils.h 
+    src/Graphics/SimpleRenderable2D.cpp             src/Graphics/SimpleRenderable2D.h
+
+    src/Gui/CustomGui.cpp                           src/Gui/CustomGui.h
+
+    src/Math/Angle.cpp                              src/Math/Angle.h 
+    src/Math/Intersections.cpp                      src/Math/Intersections.h 
+    src/Math/Length.cpp                             src/Math/Length.h
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
