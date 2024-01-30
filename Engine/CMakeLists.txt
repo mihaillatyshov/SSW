@@ -48,6 +48,11 @@ set(SOURCES
     src/Engine/Utils/json.hpp
     src/Engine/Utils/utf8.h
 
+    src/Engine/ImGui/Plots/implot.cpp                           src/Engine/ImGui/Plots/implot.h 
+    src/Engine/ImGui/Plots/implot_demo.cpp 
+    src/Engine/ImGui/Plots/implot_internal.h 
+    src/Engine/ImGui/Plots/implot_items.cpp
+
 
     src/Platform/OpenGL/Core/GLFWWindow.h                       src/Platform/OpenGL/Core/GLFWWindow.cpp
     src/Platform/OpenGL/Core/GLFWInputs.cpp
@@ -71,7 +76,7 @@ set(SOURCES
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
-add_compile_definitions(GLEW_STATIC _LIB RES_FOLDER="${CMAKE_SOURCE_DIR}/")
+add_compile_definitions(GLEW_STATIC _LIB IMGUI_DEFINE_MATH_OPERATORS RES_FOLDER="${CMAKE_SOURCE_DIR}/")
 
 add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})

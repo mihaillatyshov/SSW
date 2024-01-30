@@ -11,6 +11,7 @@
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Inputs.h"
 #include "Engine/Events/EventDispatcher.h"
+#include "Engine/ImGui/Plots/implot.h"
 #include "Engine/Utils/json.hpp"
 
 // TEMPORARY
@@ -33,6 +34,7 @@ namespace LM
         // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+        ImPlot::CreateContext();
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;    // Enable Keyboard Controls
         // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -106,6 +108,7 @@ namespace LM
     {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
+        ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }
 

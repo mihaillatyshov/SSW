@@ -30,6 +30,7 @@ namespace LM
     {
         float OffsetToolCenter;
         float OffsetToolAxis;
+        float RotationAngle;
     };
 
     struct ToolParams
@@ -39,32 +40,35 @@ namespace LM
         float Angle;
     };
 
-    struct GrindingWheelCalcParams
+    template <typename T>
+    struct GrindingWheelCalcTemplate
     {
-        float Width;
-        float R1;
-        float R2;
-        float Angle;
-        float OffsetToolCenter;
-        float OffsetToolAxis;
+        T Diametr;
+        T Width;
+        T R1;
+        T R2;
+        T Angle;
+        T OffsetToolCenter;
+        T OffsetToolAxis;
+        T RotationAngle;
     };
 
-    struct GrindingWheelCalcSteps
-    {
-        int Width;
-        int R1;
-        int R2;
-        int Angle;
-        int OffsetToolCenter;
-        int OffsetToolAxis;
-    };
+    typedef GrindingWheelCalcTemplate<float> GrindingWheelCalcParams;
+
+    typedef GrindingWheelCalcTemplate<int> GrindingWheelCalcSteps;
 
     struct CalcParams
     {
-        float Diametr;
         GrindingWheelCalcParams Min;
         GrindingWheelCalcParams Max;
         GrindingWheelCalcSteps Steps;
+    };
+
+    struct ParamsToFind
+    {
+        float FrontAngle = 0.0f;
+        float StepAngle = 0.0f;
+        float DiametrIn = 0.0f;
     };
 
     struct BestResult
@@ -75,6 +79,7 @@ namespace LM
         float Angle = 0.0f;
         float OffsetToolCenter = 0.0f;
         float OffsetToolAxis = 0.0f;
+        float RotationAngle = 0.0f;
 
         float Diametr = 0.0f;
 
@@ -95,6 +100,14 @@ namespace LM
         MoveOverToolAxisSingle Min;
     };
 
+    struct BestResultMeta
+    {
+        int Calculated = 0;
+        int BadCalculations = 0;
+
+        bool HasBestResult;
+    };
+
     glm::mat4 GetGrindingWheelMatrix(float _OffsetToolCenter, float _OffsetToolAxis, float _ToolAngle,
                                      float _RotatinOffset);
 
@@ -104,5 +117,17 @@ namespace LM
     MoveOverToolAxis CalcMoveOverToolAxis(const ShapeParams& _ShapeParams, const GrindingWheelParams& _WheelParams,
                                           const GrindingWheelProfileParams& _WheelProfileParams,
                                           const ToolParams& _ToolParams);
+
+    bool IsInsideTool(const glm::vec4 _Point, float _ToolDiametr);
+
+    bool IsWheelCorrect(const ShapeParams& _ShapeParams, const GrindingWheelParams& _WheelParams,
+                        const glm::mat4& _Matrix, float _ToolDiametr);
+
+    ShapeParams CalculateGrindingWheelSizes(const GrindingWheelParams& _WheelParams);
+
+    void CalculateBestResultSingle(const GrindingWheelParams& _WheelParams,
+                                   const GrindingWheelProfileParams& _WheelProfileParams, const ToolParams& _ToolParams,
+                                   const ParamsToFind& _ParamsToFind, ParamsToFind* _NearestParamsToFind,
+                                   float* _LowestDelta, BestResult* _BestResult, BestResultMeta* _Meta);
 
 }    // namespace LM

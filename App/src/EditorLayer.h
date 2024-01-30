@@ -20,13 +20,6 @@ namespace LM
         void OnImGuiRender() override;
 
     protected:
-        static bool IsInsideTool(const glm::vec4 _Point, float _ToolDiametr);
-
-        static bool IsWheelCorrect(const ShapeParams& _ShapeParams, const GrindingWheelParams& _WheelParams,
-                                   const glm::mat4& _Matrix, float _ToolDiametr);
-
-        static ShapeParams CalculateGrindingWheelSizes(const GrindingWheelParams& _WheelParams);
-
         void Calculate();
 
         void SetAutoCameraZoom();
@@ -38,6 +31,7 @@ namespace LM
 
         void ImGuiDrawWheelCalcParams();
 
+        void DrawPlots();
         void DrawTopMenu();
         void DrawAll();
 
