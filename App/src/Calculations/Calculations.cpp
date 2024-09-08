@@ -37,12 +37,10 @@ namespace LM
                                           const GrindingWheelProfileParams& _WheelProfileParams,
                                           const ToolParams& _ToolParams)
     {
-        MoveOverToolAxis result;
+        MoveOverToolAxis result = {};
 
-        result.Max.Offset =
-            glm::sin(glm::radians(90.0f - _WheelProfileParams.RotationAngle)) * _WheelParams.Width / 2.0f;
-        result.Max.RotationRad =
-            MoveOverToolAxisOffsetToRotationRad(result.Max.Offset, _ToolParams.Diametr, _ToolParams.Angle);
+        result.Max.Offset = 0.0f;
+        result.Max.RotationRad = 0.0f;
 
         glm::mat4 minRotationMatrix =
             GetGrindingWheelMatrix(_WheelProfileParams.OffsetToolCenter, _WheelProfileParams.OffsetToolAxis,
@@ -91,16 +89,16 @@ namespace LM
 
     ShapeParams CalculateGrindingWheelSizes(const GrindingWheelParams& _WheelParams)
     {
-        float r1CenterX = -_WheelParams.Width / 2.0f + _WheelParams.R1;
+        float r1CenterX = _WheelParams.R1;
         float r1DX = glm::sin(glm::radians(_WheelParams.Angle)) * _WheelParams.R1;
         float r1DEndX = _WheelParams.R1 + r1DX;
-        float r1PointEndX = -_WheelParams.Width / 2.0f + r1DEndX;
+        float r1PointEndX = r1DEndX;
         float r1DY = glm::cos(glm::radians(_WheelParams.Angle)) * _WheelParams.R1;
         float r1DEndY = glm::tan(glm::radians(_WheelParams.Angle)) * r1DEndX;
-        float r1PointEndY = -_WheelParams.Diametr / 2.0f + r1DEndY;
-        float r1CenterY = -_WheelParams.Diametr / 2.0f + r1DEndY + r1DY;
+        float r1PointEndY = r1DEndY;
+        float r1CenterY = r1DEndY + r1DY;
 
-        float r2CenterX = _WheelParams.Width / 2.0f - _WheelParams.R2;
+        float r2CenterX = _WheelParams.Width - _WheelParams.R2;
         float r2DX = glm::sin(glm::radians(_WheelParams.Angle)) * _WheelParams.R2;
         float r2DStartX = _WheelParams.R2 - r2DX;
         float r2DY = glm::cos(glm::radians(_WheelParams.Angle)) * _WheelParams.R2;
@@ -112,10 +110,10 @@ namespace LM
         float r2PointStartY = r1PointEndY + r1r2DY;
         float r2CenterY = r2PointStartY + r2DY;
 
-        ShapeParams result;
+        ShapeParams result = {};
 
-        result.LeftCenterPoint = { -_WheelParams.Width / 2.0f, 0.0f, 0.0f, 1.0f };
-        result.RightCenterPoint = { _WheelParams.Width / 2.0f, 0.0f, 0.0f, 1.0f };
+        result.LeftCenterPoint = { 0.0f, _WheelParams.Diametr / 2.0f, 0.0f, 1.0f };
+        result.RightCenterPoint = { _WheelParams.Width, _WheelParams.Diametr / 2.0f, 0.0f, 1.0f };
 
         result.R1Center = { r1CenterX, r1CenterY, 0.0f, 1.0f };
         result.R1Start = { result.LeftCenterPoint.x, r1CenterY, 0.0f, 1.0f };
@@ -143,11 +141,12 @@ namespace LM
             GetGrindingWheelMatrix(_WheelProfileParams.OffsetToolCenter, _WheelProfileParams.OffsetToolAxis,
                                    _WheelProfileParams.RotationAngle, 0.0f);
 
-        if (!IsWheelCorrect(shapeParams, _WheelParams, wheelMatrix0, _ToolParams.Diametr))
-        {
-            _Meta->BadCalculations++;
-            return;
-        }
+        // if (!IsWheelCorrect(shapeParams, _WheelParams, wheelMatrix0, _ToolParams.Diametr))
+        //{
+        //     _Meta->BadCalculations++;
+        //     return;
+        // }
+        // LOGW("WHEEL CORRECT!!!");
 
         MoveOverToolAxis moveOverToolAxis =
             CalcMoveOverToolAxis(shapeParams, _WheelParams,
@@ -155,6 +154,7 @@ namespace LM
                                    _WheelProfileParams.RotationAngle },
                                  _ToolParams);
 
+        // TODO: maybe need to remove maxRotationMatrix
         glm::mat4 maxRotationMatrix =
             glm::rotate(glm::mat4(1.0f), moveOverToolAxis.Max.RotationRad, glm::vec3(0.0f, 0.0f, 1.0f)) *
             GetGrindingWheelMatrix(_WheelProfileParams.OffsetToolCenter, _WheelProfileParams.OffsetToolAxis,
@@ -166,7 +166,14 @@ namespace LM
         glm::vec2 leftOnTool = LineCircleIntersection(toolRadius, maxRotationLeftCenter, maxRotationR1Start);
 
         float frontAngle = CalcAngle(glm::vec4(-leftOnTool, 0.0f, 1.0f), maxRotationR1Start - maxRotationLeftCenter);
+        if (isnan(frontAngle))
+        {
+            _Meta->BadCalculations++;
+            return;
+        }
+        LOGW("WHEEL CORRECT!!!");
 
+        // TODO: fix next time lower code
         glm::mat4 minRotationMatrix =
             glm::rotate(glm::mat4(1.0f), moveOverToolAxis.Min.RotationRad, glm::vec3(0.0f, 0.0f, 1.0f)) *
             GetGrindingWheelMatrix(_WheelProfileParams.OffsetToolCenter, _WheelProfileParams.OffsetToolAxis,
@@ -178,24 +185,23 @@ namespace LM
         glm::vec2 rightOnTool = LineCircleIntersection(toolRadius, minRotationR1End, minRotationR2Start);
 
         float stepAngle = CalcAngle(glm::vec4(rightOnTool, 0.0f, 1.0f), glm::vec4(leftOnTool, 0.0f, 1.0f));
-
-        if (isnan(stepAngle) || isnan(frontAngle))
+        if (isnan(stepAngle))
         {
             _Meta->BadCalculations++;
             return;
         }
 
-        std::vector<glm::vec4> vertices;
-        AddCircleCurve(
-            { 180.0f, 270.0f + _WheelParams.Angle, _WheelParams.R1, shapeParams.R1Center.x, shapeParams.R1Center.y },
-            kSections, vertices);
+        // std::vector<glm::vec4> vertices;
+        // AddCircleCurve(
+        //     { 180.0f, 270.0f + _WheelParams.Angle, _WheelParams.R1, shapeParams.R1Center.x, shapeParams.R1Center.y },
+        //     kSections, vertices);
 
         float diametrIn = 2.0f * LineToPointDistance(wheelMatrix0 * shapeParams.R1End,
                                                      wheelMatrix0 * shapeParams.R2Start, glm::vec2(0.0f));
-        for (const glm::vec4& vert : vertices)
-        {
-            diametrIn = glm::min(diametrIn, 2.0f * Vec2Length(wheelMatrix0 * vert));
-        }
+        // for (const glm::vec4& vert : vertices)
+        //{
+        //     diametrIn = glm::min(diametrIn, 2.0f * Vec2Length(wheelMatrix0 * vert));
+        // }
 
         if (isnan(diametrIn))
         {
@@ -203,11 +209,13 @@ namespace LM
             return;
         }
 
-        float deltaFrontAngle = glm::abs(frontAngle - _ParamsToFind.FrontAngle);
-        if (deltaFrontAngle < glm::abs(_NearestParamsToFind->FrontAngle - _ParamsToFind.FrontAngle))
-        {
-            _NearestParamsToFind->FrontAngle = frontAngle;
-        }
+        // float deltaFrontAngle = glm::abs(frontAngle - _ParamsToFind.FrontAngle);
+        // if (deltaFrontAngle < glm::abs(_NearestParamsToFind->FrontAngle - _ParamsToFind.FrontAngle))
+        //{
+        //     _NearestParamsToFind->FrontAngle = frontAngle;
+        // }
+        float deltaFrontAngle = 0.0f;
+        _NearestParamsToFind->FrontAngle = frontAngle;
         float deltaStepAngle = glm::abs(stepAngle - _ParamsToFind.StepAngle);
         if (deltaStepAngle < glm::abs(_NearestParamsToFind->StepAngle - _ParamsToFind.StepAngle))
         {

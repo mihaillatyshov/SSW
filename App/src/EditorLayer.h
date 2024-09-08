@@ -31,7 +31,7 @@ namespace LM
 
         void ImGuiDrawWheelCalcParams();
 
-        void DrawPlots();
+        void DrawPlots() const;
         void DrawTopMenu();
         void DrawAll();
 

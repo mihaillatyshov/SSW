@@ -25,7 +25,7 @@ namespace LM
     constexpr float kMaxFloat = std::numeric_limits<float>::max();
     constexpr float kMinFloat = std::numeric_limits<float>::lowest();
 
-    int MetricFormatter(double value, char* buff, int size, void* data)
+    static int MetricFormatter(double value, char* buff, int size, void* data)
     {
         const char* unit = (const char*)data;
         static double v[] = { 1000000000, 1000000, 1000, 1, 0.001, 0.000001, 0.000000001 };
@@ -63,7 +63,7 @@ namespace LM
         return -1;
     }
 
-    int InsideItemId(const std::vector<double>& XArr, double _MousePosX, double _Delta)
+    static int InsideItemId(const std::vector<double>& XArr, double _MousePosX, double _Delta)
     {
         for (int i = 0; i < XArr.size(); i++)
         {
@@ -75,8 +75,9 @@ namespace LM
         return -1;
     }
 
-    void DrawTooltip(const std::vector<double>& xs, const std::vector<double>& frontAngle,
-                     const std::vector<double>& stepAngle, const std::vector<double>& diametrIn, float width_percent)
+    static void DrawTooltip(const std::vector<double>& xs, const std::vector<double>& frontAngle,
+                            const std::vector<double>& stepAngle, const std::vector<double>& diametrIn,
+                            float width_percent)
     {
         // get ImGui window DrawList
         ImDrawList* draw_list = ImPlot::GetPlotDrawList();
@@ -86,7 +87,6 @@ namespace LM
         if (ImPlot::IsPlotHovered())
         {
             ImPlotPoint mouse = ImPlot::GetPlotMousePos();
-            LOGE("mouse", mouse.x, "  ", mouse.y);
             // mouse.x = ImPlot::RoundTime(ImPlotTime::FromDouble(mouse.x), ImPlotTimeUnit_Day).ToDouble();
             float tool_l = ImPlot::PlotToPixels(mouse.x - width_percent, mouse.y).x;
             float tool_r = ImPlot::PlotToPixels(mouse.x + width_percent, mouse.y).x;
@@ -145,31 +145,30 @@ namespace LM
         m_GrindingWheelCalcParams.Steps.OffsetToolAxis = 40;
         m_GrindingWheelCalcParams.Steps.RotationAngle = 10;
 
-        //m_GrindingWheelCalcParams.Max.Diametr = 200.0f;
-        //m_GrindingWheelCalcParams.Max.Width = 54.0f;
-        //m_GrindingWheelCalcParams.Max.R1 = 10.0f;
-        //m_GrindingWheelCalcParams.Max.R2 = 5.0f;
-        //m_GrindingWheelCalcParams.Max.Angle = 45.0f;
-        //m_GrindingWheelCalcParams.Max.OffsetToolCenter = 134.0f;
-        //m_GrindingWheelCalcParams.Max.OffsetToolAxis = 19.0f;
-        //m_GrindingWheelCalcParams.Max.RotationAngle = 65.0f;
+        // m_GrindingWheelCalcParams.Max.Diametr = 200.0f;
+        // m_GrindingWheelCalcParams.Max.Width = 54.0f;
+        // m_GrindingWheelCalcParams.Max.R1 = 10.0f;
+        // m_GrindingWheelCalcParams.Max.R2 = 5.0f;
+        // m_GrindingWheelCalcParams.Max.Angle = 45.0f;
+        // m_GrindingWheelCalcParams.Max.OffsetToolCenter = 134.0f;
+        // m_GrindingWheelCalcParams.Max.OffsetToolAxis = 19.0f;
+        // m_GrindingWheelCalcParams.Max.RotationAngle = 65.0f;
 
-        //m_GrindingWheelCalcParams.Steps.Diametr = 1;
-        //m_GrindingWheelCalcParams.Steps.Width = 1;
-        //m_GrindingWheelCalcParams.Steps.R1 = 1;
-        //m_GrindingWheelCalcParams.Steps.R2 = 1;
-        //m_GrindingWheelCalcParams.Steps.Angle = 1;
-        //m_GrindingWheelCalcParams.Steps.OffsetToolCenter = 1;
-        //m_GrindingWheelCalcParams.Steps.OffsetToolAxis = 1;
-        //m_GrindingWheelCalcParams.Steps.RotationAngle = 2;
+        // m_GrindingWheelCalcParams.Steps.Diametr = 1;
+        // m_GrindingWheelCalcParams.Steps.Width = 1;
+        // m_GrindingWheelCalcParams.Steps.R1 = 1;
+        // m_GrindingWheelCalcParams.Steps.R2 = 1;
+        // m_GrindingWheelCalcParams.Steps.Angle = 1;
+        // m_GrindingWheelCalcParams.Steps.OffsetToolCenter = 1;
+        // m_GrindingWheelCalcParams.Steps.OffsetToolAxis = 1;
+        // m_GrindingWheelCalcParams.Steps.RotationAngle = 2;
 
         m_ToolParams.Diametr = 100.0f;
         m_ToolParams.Height = 600.0f;
         m_ToolParams.Angle = 60.0f;
 
-        m_GrindingWheelProfileParams.OffsetToolCenter =
-            m_ToolParams.Diametr / 2.0f + m_GrindingWheelParams.Diametr / 2.0f * 0.625f;
-        m_GrindingWheelProfileParams.OffsetToolAxis = -(m_GrindingWheelParams.Width * 0.125f);
+        m_GrindingWheelProfileParams.OffsetToolCenter = 0.0f;
+        m_GrindingWheelProfileParams.OffsetToolAxis = 0.0f;
         m_GrindingWheelProfileParams.RotationAngle = 65.0f;
 
         SetAutoCameraZoom();
@@ -215,7 +214,7 @@ namespace LM
         paramsToFind.StepAngle = 50.0f;
         paramsToFind.DiametrIn = 75.0f;
 
-        size_t theadsCount = m_GrindingWheelCalcParams.Steps.Width + 1;
+        int theadsCount = m_GrindingWheelCalcParams.Steps.Angle + 1;
 
         std::vector<float> lowestDeltaArr(theadsCount, kMaxFloat);
 
@@ -229,40 +228,50 @@ namespace LM
 #define SH_FOR_END                                                                                                     \
     })
 
+        const float resultAxisOffset = glm::sin(glm::radians(paramsToFind.FrontAngle)) * (m_ToolParams.Diametr / 2.0f);
+
         LOGD();
         std::for_each(
-            std::execution::par_unseq, widthStepArr.begin(), widthStepArr.end(),
-            [=, &lowestDeltaArr, &nearestParamsToFindArr, &bestResultArr, &metaArr](int widthStep) {
-                float width = ValueByStep(m_GrindingWheelCalcParams.Min.Width, m_GrindingWheelCalcParams.Max.Width,
-                                          widthStep, m_GrindingWheelCalcParams.Steps.Width);
+            std::execution::par_unseq, angleStepArr.begin(), angleStepArr.end(),
+            [=, &lowestDeltaArr, &nearestParamsToFindArr, &bestResultArr, &metaArr](int angleStep) {
+                float angle = ValueByStep(m_GrindingWheelCalcParams.Min.Angle, m_GrindingWheelCalcParams.Max.Angle,
+                                          angleStep, m_GrindingWheelCalcParams.Steps.Angle);
 
-                float& lowestDelta = lowestDeltaArr[widthStep];
-                ParamsToFind& nearestParamsToFind = nearestParamsToFindArr[widthStep];
-                BestResult& bestResult = bestResultArr[widthStep];
-                BestResultMeta& meta = metaArr[widthStep];
+                float& lowestDelta = lowestDeltaArr[angleStep];
+                ParamsToFind& nearestParamsToFind = nearestParamsToFindArr[angleStep];
+                BestResult& bestResult = bestResultArr[angleStep];
+                BestResultMeta& meta = metaArr[angleStep];
 
-                LOGW("Calculating: ", width);
-                SH_FOR(diametr, Diametr)
-                SH_FOR(r1, R1)
-                SH_FOR(r2, R2)
-                SH_FOR(angle, Angle)
+
+
+                LOGI("Calculating block for angle: ", angle);
+                float diametr = 10000.0f;
+                float width = 10000.0f;
+
+                // TODO: later add r1 and r2 to calculations
+                float r1 = 0;
+                float r2 = 0;
+
+                //SH_FOR(diametr, Diametr)
+                //SH_FOR(r1, R1)
+                //SH_FOR(r2, R2)
+                //SH_FOR(angle, Angle)
                 SH_FOR(offsetToolCenter, OffsetToolCenter)
-                SH_FOR(offsetToolAxis, OffsetToolAxis)
+                //SH_FOR(offsetToolAxis, OffsetToolAxis)
                 SH_FOR(rotationAngle, RotationAngle)
 
                 GrindingWheelParams params = { diametr, width, r1, r2, angle };
-                GrindingWheelProfileParams profileParams = { offsetToolCenter, offsetToolAxis, rotationAngle };
+                GrindingWheelProfileParams profileParams = { offsetToolCenter, resultAxisOffset, rotationAngle };
 
                 CalculateBestResultSingle(params, profileParams, m_ToolParams, paramsToFind, &nearestParamsToFind,
                                           &lowestDelta, &bestResult, &meta);
 
                 SH_FOR_END;
                 SH_FOR_END;
-                SH_FOR_END;
-                SH_FOR_END;
-                SH_FOR_END;
-                SH_FOR_END;
-                SH_FOR_END;
+                //SH_FOR_END;
+                //SH_FOR_END;
+                //SH_FOR_END;
+                //SH_FOR_END;
             });
 
         LOGD();
@@ -271,7 +280,7 @@ namespace LM
         m_BestResult = bestResultArr[0];
         m_HasBestResult = metaArr[0].HasBestResult;
 
-        for (int i = 1; i <= m_GrindingWheelCalcParams.Steps.Width; i++)
+        for (int i = 1; i <= m_GrindingWheelCalcParams.Steps.Angle; i++)
         {
             if (lowestDeltaArr[i] < lowestDelta)
             {
@@ -287,21 +296,18 @@ namespace LM
 
         auto endTime = std::chrono::system_clock::now();
 
-        /*LOGW("Nearest FrontAngle: ", nearestParamsToFind.FrontAngle);
-        LOGW("Nearest StepAngle: ", nearestParamsToFind.StepAngle);
-        LOGW("Nearest Diametr In: ", nearestParamsToFind.DiametrIn);
-        LOGW("Max Calculations: ", maxCalculations);
-        LOGW("Lowest Delta: ", lowestDelta);
-        LOGW("Bad Calculations: ", float(meta.BadCalculations) / float(maxCalculations) * 100.0f, "% (",
-             meta.BadCalculations, ")");*/
-        LOGW("Calculation Time: ",
+        LOGI("Calculation Time: ",
              std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count() / 1000.0, "s");
     }
 
     void EditorLayer::SetAutoCameraZoom()
     {
         m_CameraZoom =
-            glm::max(m_GrindingWheelParams.Diametr + m_ToolParams.Diametr, m_GrindingWheelParams.Width) / 2.0f;
+            glm::max(
+                glm::max(m_GrindingWheelParams.Diametr / 2.0f + glm::abs(m_GrindingWheelProfileParams.OffsetToolCenter),
+                         m_GrindingWheelParams.Width + glm::abs(m_GrindingWheelProfileParams.OffsetToolAxis)),
+                m_ToolParams.Diametr / 2.0f) *
+            1.1f;
     }
 
     void EditorLayer::CreateGrindingWheelShape()
@@ -313,55 +319,36 @@ namespace LM
 
         auto wheelParams = CalculateGrindingWheelSizes(m_GrindingWheelParams);
 
+        uint32_t leftCenterVertId = vertices.size();
         vertices.emplace_back(wheelParams.LeftCenterPoint);
-        uint32_t leftCenterVertId = vertices.size() - 1;
-
-        float r1CenterX = -m_GrindingWheelParams.Width / 2.0f + m_GrindingWheelParams.R1;
-        float r1DX = glm::sin(glm::radians(m_GrindingWheelParams.Angle)) * m_GrindingWheelParams.R1;
-        float r1DEndX = m_GrindingWheelParams.R1 + r1DX;
-        float r1PointEndX = -m_GrindingWheelParams.Width / 2.0f + r1DEndX;
-        float r1DY = glm::cos(glm::radians(m_GrindingWheelParams.Angle)) * m_GrindingWheelParams.R1;
-        float r1DEndY = glm::tan(glm::radians(m_GrindingWheelParams.Angle)) * r1DEndX;
-        float r1PointEndY = -m_GrindingWheelParams.Diametr / 2.0f + r1DEndY;
-        float r1CenterY = -m_GrindingWheelParams.Diametr / 2.0f + r1DEndY + r1DY;
 
         uint32_t r1StartVertId = vertices.size();
-        AddCircleCurve({ 180.0f, 270.0f + m_GrindingWheelParams.Angle, m_GrindingWheelParams.R1, r1CenterX, r1CenterY },
+        AddCircleCurve({ 180.0f, 270.0f + m_GrindingWheelParams.Angle, m_GrindingWheelParams.R1, wheelParams.R1Center.x,
+                         wheelParams.R1Center.y },
                        kSections, vertices);
         uint32_t r1EndVertId = vertices.size() - 1;
 
-        for (size_t i = r1StartVertId + 1; i < vertices.size(); i++)
+        for (int i = r1StartVertId + 1; i < vertices.size(); i++)
         {
-            IndicesAddTriangle(indices, 0, i - 1, i);
+            IndicesAddTriangle(indices, leftCenterVertId, i - 1, i);
         }
 
-        float r2CenterX = m_GrindingWheelParams.Width / 2.0f - m_GrindingWheelParams.R2;
-        float r2DX = glm::sin(glm::radians(m_GrindingWheelParams.Angle)) * m_GrindingWheelParams.R2;
-        float r2DStartX = m_GrindingWheelParams.R2 - r2DX;
-        float r2DY = glm::cos(glm::radians(m_GrindingWheelParams.Angle)) * m_GrindingWheelParams.R2;
-
-        float r1r2DX = m_GrindingWheelParams.Width - r1DEndX - r2DStartX;
-        float r1r2DY = glm::tan(glm::radians(m_GrindingWheelParams.Angle)) * r1r2DX;
-        float r2PointStartX = r1PointEndX + r1r2DX;
-        float r2PointStartY = r1PointEndY + r1r2DY;
-        float r2CenterY = r2PointStartY + r2DY;
+        uint32_t rightCenterVertId = vertices.size();
+        vertices.emplace_back(wheelParams.RightCenterPoint);
 
         uint32_t r2StartVertId = vertices.size();
-        AddCircleCurve({ 270.0f + m_GrindingWheelParams.Angle, 360.0f, m_GrindingWheelParams.R2, r2CenterX, r2CenterY },
+        AddCircleCurve({ 270.0f + m_GrindingWheelParams.Angle, 360.0f, m_GrindingWheelParams.R2, wheelParams.R2Center.x,
+                         wheelParams.R2Center.y },
                        kSections, vertices);
         uint32_t r2EndVertId = vertices.size() - 1;
 
-        vertices.emplace_back(wheelParams.RightCenterPoint);
-        uint32_t rightCenterVertId = vertices.size() - 1;
-
-        for (size_t i = r2StartVertId + 1; i < vertices.size(); i++)
+        for (int i = r2StartVertId + 1; i < vertices.size(); i++)
         {
-            IndicesAddTriangle(indices, 0, i - 1, i);
+            IndicesAddTriangle(indices, rightCenterVertId, i - 1, i);
         }
 
-        IndicesAddTriangle(indices, 0, r1EndVertId, r2StartVertId);
-        IndicesAddTriangle(indices, 0, leftCenterVertId, r1StartVertId);
-        IndicesAddTriangle(indices, 0, r2EndVertId, rightCenterVertId);
+        IndicesAddTriangle(indices, leftCenterVertId, r1EndVertId, r2StartVertId);
+        IndicesAddTriangle(indices, leftCenterVertId, r2StartVertId, rightCenterVertId);
 
         m_WheelShape.Create(vertices, indices);
     }
@@ -688,37 +675,6 @@ namespace LM
             MoveOverToolAxis moveOverToolAxis =
                 CalcMoveOverToolAxis(shapeParams, m_GrindingWheelParams, m_GrindingWheelProfileParams, m_ToolParams);
 
-            // float maxOffset = glm::sin(glm::radians(90.0f - m_ToolParams.Angle)) * m_GrindingWheelParams.Width
-            // / 2.0f; float maxCalcRotation =
-            //     glm::degrees((maxOffset / glm::tan(glm::radians(m_ToolParams.Angle))) / (m_ToolParams.Diametr
-            //     / 2.0f));
-
-            // glm::mat4 minRotationMatrix =
-            //     GetGrindingWheelMatrix(m_GrindingWheelProfileParams.OffsetToolCenter,
-            //                            m_GrindingWheelProfileParams.OffsetToolAxis,
-            //                            m_GrindingWheelProfileParams.RotationAngle, 0.0f);
-
-            // glm::vec4 minRotationR1End = minRotationMatrix * calculatedParams.R1End;
-            // glm::vec4 minRotationR2Start = minRotationMatrix * calculatedParams.R2Start;
-
-            // glm::vec2 rightOnToolNoAngle =
-            //     LineCircleIntersection(m_ToolParams.Diametr / 2.0f, minRotationR1End, minRotationR2Start);
-
-            // LOGD();
-
-            // float dX = rightOnToolNoAngle.x - m_GrindingWheelProfileParams.OffsetToolAxis;
-            // float minOffset = -glm::tan(glm::radians(90.0f - m_ToolParams.Angle)) * dX;
-            // float minCalcRotation =
-            //     glm::degrees((minOffset / glm::tan(glm::radians(m_ToolParams.Angle))) / (m_ToolParams.Diametr
-            //     / 2.0f));
-
-            // LOGW("maxRotationR1End: ", minRotationR1End.x, "  ", minRotationR1End.y);
-            // LOGW("maxRotationR2Start: ", minRotationR2Start.x, "  ", minRotationR2Start.y);
-            // LOGW("dx: ", dX);
-            // LOGW("rightOnTool: ", rightOnToolNoAngle.x, "  ", rightOnToolNoAngle.y);
-            // LOGW("maxOffset: ", maxOffset);
-            // LOGW("maxCalcRotation: ", maxCalcRotation);
-
             if (Gui::BeginPropsTable("Rendering"))
             {
                 Gui::DragFloat("Camera Angle X", &m_CameraAngleX, 0.1f, -60.0f, 60.0f);
@@ -773,7 +729,7 @@ namespace LM
         ImPlot::ShowDemoWindow();
     }
 
-    void EditorLayer::DrawPlots()
+    void EditorLayer::DrawPlots() const
     {
         if (ImGui::Begin("Tool Angle Plot"))
         {
@@ -785,7 +741,6 @@ namespace LM
                     std::vector<double> frontAngleArr;
                     std::vector<double> stepAngleArr;
                     std::vector<double> diametrInArr;
-
 
                     for (int i = -5; i <= 5; i++)
                     {
